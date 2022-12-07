@@ -1,10 +1,9 @@
 import atividade.Atividade;
 import projeto.Projeto;
+import db.singletonDB;
 import usuario.*;
 import tarefa.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -12,11 +11,8 @@ public class Main {
         try{
             Scanner leitor = new Scanner(System.in);
             Usuario atual = null;
-            Auxiliar auxiliar = new Auxiliar();
-            List<Usuario> listaDeUsuarios = new ArrayList<Usuario>();
-            List<Projeto> listaDeProjetos = new ArrayList<Projeto>();
-            List<Atividade> listaDeAtividades = new ArrayList<Atividade>();
-            List<Tarefa> listaDeTarefas = new ArrayList<Tarefa>();
+            Facade facade = new Facade();
+            singletonDB db = singletonDB.getInstance();
 
 
             while (true){
@@ -33,11 +29,11 @@ public class Main {
                     if (entrada == 0){
                         break;
                     }else if (entrada == 1){
-                        Usuario novoUsuario = auxiliar.criarUsuario();
+                        Usuario novoUsuario = facade.criarUsuario();
                         if (novoUsuario == null){
-                            System.out.println("Falaha na criacao do novo usuario");
+                            System.out.println("Falha na criacao do novo usuario");
                         }else{
-                            listaDeUsuarios.add(novoUsuario);
+                            db.addUser(novoUsuario);
                             System.out.println("Novo usuario criado com sucesso");
                         }
                     } else if (entrada == 2) {
@@ -46,7 +42,7 @@ public class Main {
                         System.out.println("Digite a senha");
                         String senha = leitor.nextLine();
                         boolean logado = false;
-                        for (Usuario u : listaDeUsuarios){
+                        for (Usuario u : db.getListaDeUsuarios()){
                             if (u.login(login, senha)){
                                 atual = u;
                                 System.out.println("Logado com sucesso");
@@ -63,7 +59,7 @@ public class Main {
                         System.out.println("Digite a palavra secreta");
                         String palavraSecreta = leitor.nextLine();
                         boolean logado = false;
-                        for (Usuario u : listaDeUsuarios){
+                        for (Usuario u : db.getListaDeUsuarios()){
                             if (u.recuperar_senha(login, palavraSecreta).startsWith("Senha:")){
                                 System.out.println(u.recuperar_senha(login, palavraSecreta));
                                 logado = true;
@@ -100,9 +96,9 @@ public class Main {
                         entrada = leitor.nextInt();
                         leitor.nextLine();
                         if(entrada == 0){
-                            auxiliar.atualizarUsuario(atual);
+                            facade.atualizarUsuario(atual);
                         } else if (entrada == 1) {
-                            listaDeUsuarios.remove(atual);
+                            db.delUser(atual.getId());
                             atual = null;
                         }else if (entrada == 2) {
                             break;
@@ -119,30 +115,29 @@ public class Main {
                                 entrada = leitor.nextInt();
                                 leitor.nextLine();
                                 if (entrada == 0){
-                                    Projeto novoProjeto = auxiliar.criarProjeto(atual.getId());
+                                    Projeto novoProjeto = facade.criarProjeto(atual.getId());
                                     novoProjeto.exibir();
-                                    listaDeProjetos.add(novoProjeto);
+                                    db.addProject(novoProjeto);
                                 }else if (entrada == 1){
                                     System.out.println("Digite o id do projeto");
                                     int id_projeto = leitor.nextInt();
                                     leitor.nextLine();
-                                    if(!auxiliar.naListaProjeto(id_projeto, listaDeProjetos)){
+                                    if(!db.projectIn(id_projeto)){
                                         System.out.println("Projeto nao encontrado ");
                                         continue;
                                     }else{
-                                        Projeto projeto = auxiliar.getProjeto(id_projeto, listaDeProjetos);
+                                        Projeto projeto = db.getProject(id_projeto);
                                         projeto.exibir();
                                     }
                                 } else if (entrada == 2) {
                                     System.out.println("Digite o id do projeto");
                                     int id_projeto = leitor.nextInt();
                                     leitor.nextLine();
-                                    if(!auxiliar.naListaProjeto(id_projeto, listaDeProjetos)){
+                                    if(!db.projectIn(id_projeto)){
                                         System.out.println("Projeto nao encontrado ");
                                         continue;
                                     }else{
-                                        Projeto projeto = auxiliar.getProjeto(id_projeto, listaDeProjetos);
-                                        listaDeProjetos.remove(projeto);
+                                        db.delProject(id_projeto);
                                     }
                                 }else if (entrada == 3){
                                     break;
@@ -167,14 +162,14 @@ public class Main {
                             System.out.println("Digite data fim");
                             String dataFim = leitor.nextLine();
                             Atividade nova_atividade = new Atividade(nome, dataInicio, dataFim, atual.getId());
-                            listaDeAtividades.add(nova_atividade);
+                            db.addAtividade(nova_atividade);
                             nova_atividade.exibir();
                         }else if(entrada == 1){
                             System.out.println("Digite o id da atividade");
                             int atividadeId = leitor.nextInt();
                             leitor.nextLine();
-                            if (auxiliar.naListaAtividade(atividadeId, listaDeAtividades)){
-                                auxiliar.alterarAtividade(auxiliar.getAtividade(atividadeId, listaDeAtividades));
+                            if (db.atividadeIn(atividadeId)){
+                                facade.alterarAtividade(facade.getAtividade(atividadeId, db.getListaDeAtividades()));
                             }else {
                                 System.out.println("atividade nao encontrada");
                             }
@@ -182,19 +177,14 @@ public class Main {
                             System.out.println("Digite o id");
                             int atividadeId = leitor.nextInt();
                             leitor.nextLine();
-                            for (Atividade a_tmp : listaDeAtividades){
-                                if (a_tmp.getId() == atividadeId){
-                                    listaDeAtividades.remove(a_tmp);
-                                    break;
-                                }
-                            }
+                            db.delAtividade(atividadeId);
                         } else if (entrada == 3) {
                             System.out.println("Digite o id da atividade");
                             int atividadeId = leitor.nextInt();
                             leitor.nextLine();
                             Atividade atividade = null;
                             boolean existe = false;
-                            for (Atividade a_tmp : listaDeAtividades){
+                            for (Atividade a_tmp : db.getListaDeAtividades()){
                                 if (a_tmp.getId() == atividadeId){
                                     existe = true;
                                     atividade = a_tmp;
@@ -208,7 +198,7 @@ public class Main {
                             int tarefaId = leitor.nextInt();
                             leitor.nextLine();
                             existe = false;
-                            for (Tarefa t_tmp : listaDeTarefas){
+                            for (Tarefa t_tmp : db.getListaDeTarefas()){
                                 if (t_tmp.getId() == tarefaId){
                                     existe = true;
                                 }
@@ -225,7 +215,7 @@ public class Main {
                             leitor.nextLine();
                             Atividade atividade = null;
                             boolean existe = false;
-                            for (Atividade a_tmp : listaDeAtividades){
+                            for (Atividade a_tmp : db.getListaDeAtividades()){
                                 if (a_tmp.getId() == atividadeId){
                                     existe = true;
                                     atividade = a_tmp;
@@ -239,7 +229,7 @@ public class Main {
                             int tarefaId = leitor.nextInt();
                             leitor.nextLine();
                             existe = false;
-                            for (Tarefa t_tmp : listaDeTarefas){
+                            for (Tarefa t_tmp : db.getListaDeTarefas()){
                                 if (t_tmp.getId() == tarefaId){
                                     existe = true;
                                 }
@@ -265,9 +255,9 @@ public class Main {
                             System.out.println("Digite id do usuario alocado ");
                             int id = leitor.nextInt();
                             leitor.nextLine();
-                            if (auxiliar.naListaUsuario(id, listaDeUsuarios)){
+                            if (db.userIn(id)){
                                 Tarefa tarefa = new Tarefa(nome, id);
-                                listaDeTarefas.add(tarefa);
+                                db.addTarefa(tarefa);
                             }else {
                                 System.out.println("Usuario nao encontrada");
                             }
@@ -275,18 +265,17 @@ public class Main {
                             System.out.println("Digite o id da tarefa");
                             entrada = leitor.nextInt();
                             leitor.nextLine();
-                            auxiliar.getTarefas(entrada, listaDeTarefas);
-
+                            db.delTarefa(entrada);
                         }
                     } else if (entrada == 6) {
                         System.out.println("Relatorio Geral");
-                        for (Projeto p_tmp : listaDeProjetos){
+                        for (Projeto p_tmp : db.getListaDeProjetos()){
                             p_tmp.exibir();
                         }
-                        for (Usuario u_tmp : listaDeUsuarios){
+                        for (Usuario u_tmp : db.getListaDeUsuarios()){
                             u_tmp.exibir();
                         }
-                        for (Atividade a_tmp : listaDeAtividades){
+                        for (Atividade a_tmp : db.getListaDeAtividades()){
                             a_tmp.exibir();
                         }
                     } else if (entrada == 7) {//adicionar remover atividade
@@ -300,8 +289,8 @@ public class Main {
                         System.out.println("Digite id do projetp ");
                         int idProjeto = leitor.nextInt();
                         leitor.nextLine();
-                        if(auxiliar.naListaProjeto(idProjeto, listaDeProjetos) && auxiliar.naListaAtividade(idAtividade, listaDeAtividades)){
-                            Projeto p_tmp = auxiliar.getProjeto(idProjeto, listaDeProjetos);
+                        if(db.projectIn(idProjeto) && db.atividadeIn(idAtividade) ){
+                            Projeto p_tmp = db.getProject(idProjeto);
                             p_tmp.addAtividade(idAtividade);
                         }else {
                             System.out.println("Error projeto ou atividade nao encontrada");
