@@ -1,5 +1,9 @@
 package projeto;
 
+import intervaloDeDatas.IntervaloDeDatas;
+import projeto.estado.Criacao;
+import projeto.estado.Estado;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,10 +14,9 @@ public class Projeto {
     private int id;
     private String nome;
     private String descricao;
-    private String dataInicio;
-    private String dataFim;
+    private IntervaloDeDatas data;
     private int idResponsavel;
-    private String status;
+    private Estado status;
     private List<Integer> idProfissionaisEnvolvidos;
     private List<Integer> idAtividades;
     private List<Integer> idBolsas;
@@ -22,44 +25,57 @@ public class Projeto {
         this.id = idSemente++;
         this.nome = nome;
         this.descricao = descricao;
-        this.dataInicio = dataInicio;
-        this.dataFim = dataFim;
+        this.data = new IntervaloDeDatas(dataInicio, dataFim);
         this.idResponsavel = idResponsavel;
-        this.status = "Em processo de criação";
+        this.status = new Criacao(this);
         this.idProfissionaisEnvolvidos = new ArrayList<Integer>();
         this.idAtividades = new ArrayList<Integer>();
         this.idBolsas = new ArrayList<Integer>();
     }
 
     public void mudarStatus(){
-        if (this.status.equals("Em processo de criação")){
-            if (this.nome.length() > 1 && this.descricao.length() > 1 && this.dataInicio.length() > 1 && this.dataFim.length() > 1){
-                this.status = "Iniciado";
-            }else{
-                System.out.println("Projeto nao cumpre os requisitos minimos para mudar de status");
+        this.status.atualizarEstado();
+    }
+
+    public void atualizar(){
+        Scanner leitor = new Scanner(System.in);
+        int entrada;
+        while (true){
+            System.out.println("\nDigite 0 para alterar o status do projeto");
+            System.out.println("Digite 1 para alterar o nome do projeto");
+            System.out.println("Digite 2 para alterar a descricao do projeto");
+            System.out.println("Digite 3 para alterar a data inicio do projeto");
+            System.out.println("Digite 4 para alterar a data fim do projeto");
+            System.out.println("Digite 5 para voltar ao menu\n");
+            entrada = leitor.nextInt();
+            leitor.nextLine();
+            if (entrada == 0){
+                this.mudarStatus();
+            } else if (entrada == 1) {
+                System.out.println("\nDigite o nome\n");
+                String nome = leitor.nextLine();
+                this.setNome(nome);
+            } else if (entrada == 2) {
+                System.out.println("\nDigite a descricao\n");
+                String descricao = leitor.nextLine();
+                this.setDescricao(descricao);
+            } else if (entrada == 3) {
+                System.out.println("\nDigite a data de inicio\n");
+                String data = leitor.nextLine();
+                this.setDataInicio(data);
+            } else if (entrada == 4) {
+                System.out.println("\nDigite a data fim\n");
+                String data = leitor.nextLine();
+                this.setDataFim(data);
+            } else if (entrada == 5) {
+                break;
             }
-        } else if (this.status.equals("Iniciado")) {
-            Scanner leitor = new Scanner(System.in);
-            System.out.println("Realmente quer mudar o status para em andamento ? (digite sim para alterar ou qualquer outra coisa para nao alterar) ");
-            String resposta = leitor.nextLine();
-            if (resposta.equals("sim")){
-                this.status = "Em andamento";
-            }else{
-                System.out.println("Mudanca de status cancelada");
-            }
-        } else if (this.status.equals("Em andamento")) {
-            if (this.descricao.length() > 1 && this.idAtividades.size() > 1){
-                this.status = "Concluido";
-            }else{
-                System.out.println("Projeto nao cumpre os requisitos minimos para mudar de status");
-            }
-        } else if (this.status.equals("Concluido")) {
-            System.out.println("Projeto ja foi concluido");
-        }else {
-            System.out.println("Status atual invalido");
         }
     }
 
+    public void setStatus(Estado estado){
+        this.status = estado;
+    }
     public int getId() {
         return id;
     }
@@ -81,20 +97,18 @@ public class Projeto {
     }
 
     public String getDataInicio() {
-        return dataInicio;
+        return this.data.getDataInicio();
     }
 
-    public void setDataInicio(String dataInicio) {
-        this.dataInicio = dataInicio;
-    }
+    public void setDataInicio(String dataInicio) {this.data.setDataInicio(dataInicio);}
 
     public String getDataFim() {
-        return dataFim;
+        return data.getDataFim();
     }
 
-    public void setDataFim(String dataFim) {
-        this.dataFim = dataFim;
-    }
+    public void setDataFim(String dataFim) {this.data.setDataFim(dataFim);}
+
+    public IntervaloDeDatas getData() {return data;}
 
     public int getIdResponsavel() {
         return idResponsavel;
@@ -105,47 +119,50 @@ public class Projeto {
     }
 
     public void exibir(){
-        System.out.println("Projeto");
+        System.out.println("\nProjeto");
         System.out.println("Nome: " + this.nome );
         System.out.println("Descricao: " + this.descricao );
-        System.out.println("Data inicio: " + this.dataInicio );
-        System.out.println("Data fim: " + this.dataFim );
+        this.data.exibir();
         System.out.println("Id responsavel: " + this.idResponsavel );
         System.out.println("Status: " + this.status);
     }
 
     public void addUsuario(int id){
         if(this.idProfissionaisEnvolvidos.contains(id)){
-            System.out.println("usuario ja cadastrado");
+            System.out.println("\nUsuario ja cadastrado\n");
         }else{
             this.idProfissionaisEnvolvidos.add(id);
-            System.out.println("usuario cadastrado com sucesso");
+            System.out.println("\nUsuario cadastrado com sucesso\n");
         }
 
     }
     public void removeUsuario(int id){
         if(this.idProfissionaisEnvolvidos.contains(id)){
             this.idProfissionaisEnvolvidos.remove(id);
-            System.out.println("usuario removido com sucesso");
+            System.out.println("\nUsuario removido com sucesso\n");
         }else{
-            System.out.println("usuario ja nao estava cadastrado");
+            System.out.println("\nUsuario ja nao estava cadastrado\n");
         }
     }
 
     public void addAtividade(int id){
         if(this.idAtividades.contains(id)){
-            System.out.println("atividade ja cadastrado");
+            System.out.println("\nAtividade ja cadastrada\n");
         }else{
             this.idAtividades.add(id);
-            System.out.println("atividade cadastrado com sucesso");
+            System.out.println("\nAtividade cadastrada com sucesso\n");
         }
     }
     public void removeAtividade(int id){
         if(this.idAtividades.contains(id)){
             this.idAtividades.remove(id);
-            System.out.println("atividade removida com sucesso");
+            System.out.println("\nAtividade removida com sucesso\n");
         }else{
-            System.out.println("atividade ja nao estava cadastrado");
+            System.out.println("\nAtividade ja nao estava cadastrada\n");
         }
+    }
+
+    public List<Integer> getIdAtividades() {
+        return idAtividades;
     }
 }
