@@ -1,5 +1,7 @@
 package usuario;
 
+import jdk.jshell.spi.ExecutionControl;
+
 public abstract class Usuario {
     private static int idSemente = 1;
     private int id;
@@ -45,9 +47,9 @@ public abstract class Usuario {
     public String recuperar_senha(String login,String palavraPasse){
         //System.out.println(palavraPasse);
         if (palavraPasse.equals(this.palavraPasse) && login.equals(this.login)){
-            return "Senha: " + this.senha;
+            return "\nSenha: " + this.senha;
         }else{
-            return "Palavra passe invalida";
+            return "\nPalavra passe invalida\n";
         }
 
     }
@@ -55,19 +57,24 @@ public abstract class Usuario {
     public String alterarSenha(String senhaAntiga, String senhaNova){
         if (senhaAntiga.equals(this.senha)){
             this.senha = senhaNova;
-            return "Senha alterada para: " + this.senha;
+            return "\nSenha alterada para: " + this.senha;
         }else{
-            return "Senha invalida";
+            return "\nSenha invalida\n";
         }
     }
 
     public void exibir(){
-        System.out.println("ID: " + this.id);
+        System.out.println("\nID: " + this.id);
         System.out.println("Nome: " + this.nome);
         System.out.println("Login: " + this.login);
         System.out.println("Cargo: " + this.cargo);
     }
 
+    public boolean isnull(){
+        return false;
+    }
+
+    abstract public void atualizar();
     public boolean login(String login, String senha){
         return this.login.equals(login) && this.senha.equals(senha);
     }
